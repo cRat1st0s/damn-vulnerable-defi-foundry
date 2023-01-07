@@ -36,7 +36,7 @@ case $1 in
     ;;
 
   puppet | 8 | pupp)
-    forge test --match-contract Puppet
+    forge test --match-contract Puppet --no-match-contract PuppetV2
     ;;
 
   puppet-v2 | 9 | pupp2)
@@ -55,8 +55,8 @@ case $1 in
     forge test --match-contract Climber
     ;;
 
-  junior-miners | 13 | juni)
-    forge test --match-contract JuniorMiners
+  safe-miners | 13 | safe)
+    forge test --match-contract SafeMiners
     ;;
 
   *)
