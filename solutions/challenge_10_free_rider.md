@@ -1,3 +1,51 @@
+# Damn Vulnerable DeFi (Foundry version)
+
+- [Scope](#scope)
+- [Plan](#plan)
+- [Solution](#solution)
+  - [Proof of Concept](#proof-of-concept)
+
+## Challenge #10 - Free rider - Description
+
+A new marketplace of Damn Valuable NFTs has been released! There's been an initial mint of 6 NFTs, which are available for sale in the marketplace. Each one at 15 ETH.
+
+A buyer has shared with you a secret alpha: the marketplace is vulnerable and all tokens can be taken. Yet the buyer doesn't know how to do it. So it's offering a payout of 45 ETH for whoever is willing to take the NFTs out and send them their way.
+
+You want to build some rep with this buyer, so you've agreed with the plan.
+
+Sadly you only have 0.5 ETH in balance. If only there was a place where you could get free ETH, at least for an instant.
+
+## Scope
+
+| File Name                                                                         | SHA-1 Hash                               |
+| --------------------------------------------------------------------------------- | ---------------------------------------- |
+| damn-vulnerable-defi-foundry/src/Contracts/free-rider/FreeRiderBuyer.sol          | c3257221b1c239323e6c2c1d2379744e8f6a08d7 |
+| damn-vulnerable-defi-foundry/src/Contracts/free-rider/FreeRiderNFTMarketplace.sol | c9b520fac068a5aa7702fd49596c4905e1564bbc |
+| damn-vulnerable-defi-foundry/src/Contracts/free-rider/Interfaces.sol              | a0fd58cda9b1368763a82fb7eeb2688dc22f588b |
+
+## Plan
+
+The place that we can get "free" ETH is through `Interfaces.sol` and most specific from [`Uniswap V2's Flash Swap`](https://docs.uniswap.org/contracts/v2/guides/smart-contract-integration/using-flash-swaps). This solves the first problem.
+
+Description gives us a hint that `FreeRiderNFTMarketplace` has a bug. It has four functions that the two of them have to do with buy nft(s). The bug is in [`_buyOne`](https://github.com/cRat1st0s/damn-vulnerable-defi-foundry/blob/b1b61dfe28cbdd8a7f4d3b3e1b73cf2963afc750/src/Contracts/free-rider/FreeRiderNFTMarketplace.sol#L67) when it is called from `buyMany`. It is not checked if the `msg.value` is equal to the sum of the NFTs that we want to buy but it is enough to provide an amount of 15 ETH that is the price for one NFT.
+
+## Solution
+
+1.  Trigger the flash swap.
+2.  Buy the NFTs.
+3.  Send the NFTs to the buyer.
+4.  Pay the fee for the swap.
+5.  Repay the flash swap.
+
+<details>
+    <summary>Description</summary>
+
+</details>
+
+<details>
+    <summary>damn-vulnerable-defi-foundry/test/Levels/free-rider/FreeRider.t.sol</summary>
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
@@ -205,3 +253,25 @@ contract FreeRider is Test {
 
     receive() external payable {}
 }
+```
+
+</details>
+
+### Proof of Concept
+
+```
+./run.sh 10
+[⠢] Compiling...
+[⠔] Compiling 1 files with 0.8.17
+[⠒] Solc 0.8.17 finished in 1.17s
+Compiler run successful (with warnings)
+
+Running 1 test for test/Levels/free-rider/FreeRider.t.sol:FreeRider
+[PASS] testExploit() (gas: 521756)
+Logs:
+  🧨 Let's see if you can break it... 🧨
+
+🎉 Congratulations, you can go to the next level! 🎉
+
+Test result: ok. 1 passed; 0 failed; finished in 5.03ms
+```

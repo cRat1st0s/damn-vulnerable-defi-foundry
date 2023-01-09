@@ -1,3 +1,42 @@
+# Damn Vulnerable DeFi (Foundry version)
+
+- [Scope](#scope)
+- [Plan](#plan)
+- [Solution](#solution)
+  - [Proof of Concept](#proof-of-concept)
+
+## Challenge #8 - Puppet - Description
+
+There's a huge lending pool borrowing Damn Valuable Tokens (DVTs), where you first need to deposit twice the borrow amount in ETH as collateral. The pool currently has 100000 DVTs in liquidity.
+
+There's a DVT market opened in an Uniswap v1 exchange, currently with 10 ETH and 10 DVT in liquidity.
+
+Starting with 25 ETH and 1000 DVTs in balance, you must steal all tokens from the lending pool.
+
+## Scope
+
+| File Name                                                        | SHA-1 Hash                               |
+| ---------------------------------------------------------------- | ---------------------------------------- |
+| damn-vulnerable-defi-foundry/src/Contracts/puppet/PuppetPool.sol | c82bce6a1f45ee188f695600b72f2be12a373216 |
+
+## Plan
+
+Seems like a LP oracle pool manipulation especially if you compare our liquidity with the pool's. More info can be found [here](https://osec.io/blog/reports/2022-02-16-lp-token-oracle-manipulation/).
+
+## Solution
+
+1.  Give all of our DVTs for ETH through Uniswap.
+2.  Borrow all the DVTs from the pool.
+
+<details>
+    <summary>Description</summary>
+
+</details>
+
+<details>
+    <summary>damn-vulnerable-defi-foundry/test/Levels/puppet/Puppet.t.sol</summary>
+
+```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
 
@@ -130,3 +169,25 @@ contract Puppet is Test {
         return numerator / denominator;
     }
 }
+```
+
+</details>
+
+### Proof of Concept
+
+```
+./run.sh 8
+[⠢] Compiling...
+[⠒] Compiling 1 files with 0.8.17
+[⠢] Solc 0.8.17 finished in 777.45ms
+Compiler run successful (with warnings)
+
+Running 1 test for test/Levels/puppet/Puppet.t.sol:Puppet
+[PASS] testExploit() (gas: 152740)
+Logs:
+  🧨 Let's see if you can break it... 🧨
+
+🎉 Congratulations, you can go to the next level! 🎉
+
+Test result: ok. 1 passed; 0 failed; finished in 1.36ms
+```
